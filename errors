@@ -1,0 +1,12 @@
+pyscopg2 not found => install the modeule Psycopg2-binary 				
+
+
+
+
+
+psycopg mmodule not found ----------- sudo apt install postgresql-server-dev-all
+
+
+free the port  =--------------------------- sudo fuser -k 8000/tcp
+
+
