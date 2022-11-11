@@ -45,7 +45,7 @@ class Story(models.Model):
     body_text = models.TextField(max_length=1000)
     url = models.URLField(max_length=500)
     companies = models.ManyToManyField(Company)
-    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE, null=True)
     client = models.ForeignKey(Company,related_name='story_client', on_delete=models.CASCADE, null=True)
 
     class Meta:

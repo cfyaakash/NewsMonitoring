@@ -1,0 +1,10 @@
+<div class="main">
+
+    <form method="POST">
+
+        {% csrf_token %}
+        Are you want to delete this source ? All the stories related to this source will be Deleted.
+        <input type="submit" value="Yes" />
+        <a href="/sources">Cancel </a>
+    </form>
+</div>

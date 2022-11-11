@@ -80,13 +80,12 @@ def source(request):
     if request.method == 'POST':
         form = SourceForm(request.POST)
         if form.is_valid():
-            user_here = request.user.id
+            curr_user = request.user.id
             name = request.POST.get('name')
             url = request.POST.get('url')
-
-            sub = Subscriber.objects.get(user=user_here)
-            client = sub.client
-
+            # sub = Subscriber.objects.get(user=user_here)
+            sub = Subscriber.objects.select_related('client').get(user=curr_user)
+            client = sub.client  # does not hit the database again
             source_save = Source.objects.create(name=name, url=url, created_by=sub, client=client)
             source_save.save()
 
@@ -98,21 +97,26 @@ def source(request):
 
 
 def sourceList(request):
-    user_here = request.user
-    if user_here.is_staff:
+    # import ipdb;
+    # ipdb.set_trace()
+    curr_user = request.user
+    if curr_user.is_staff:
         sources = Source.objects.all()
-        count = Source.objects.all().count()
+        count = 0
+        for i in sources:
+            count = count + 1
+        # count = Source.objects.all().count()
         if count == 0:
             return redirect('/source')
-        # import ipdb;
-        # ipdb.set_trace()
 
     else:
-        user_here = request.user.id
-        sub = Subscriber.objects.get(user=user_here)
-
+        curr_user = request.user.id
+        sub = Subscriber.objects.get(user=curr_user)
+        # sub = Source.objects.select_related('created_by')
         sources = Source.objects.filter(created_by=sub)
-        count = Source.objects.filter(created_by=sub).count()
+        count = 0
+        for i in sources:
+            count = count + 1
 
     context = {'sources': sources, 'count': count}
     return render(request, "newsStories/sourcesList.html", context)
@@ -139,9 +143,13 @@ def update_source(request, pk):
 
 
 def source_delete(request, pk):
+    context = {}
     old_data = Source.objects.get(id=pk)
-    old_data.delete()
-    return redirect('/sources')
+    if request.method == "POST":
+        old_data.delete()
+        return redirect('/sources')
+
+    return render(request, "newsStories/delete_source.html", context)
 
 
 def source_search(request):
@@ -163,7 +171,7 @@ def add_story(request):
     if request.method == 'POST':
         form = StoryForm(request.POST)
         if form.is_valid():
-            user_here = request.user.id
+            # user_here = request.user.id
             title = form.cleaned_data['title']
             url = form.cleaned_data['url']
             pub_date = form.cleaned_data['pub_date']
@@ -171,7 +179,7 @@ def add_story(request):
             source = form.cleaned_data['source']
             company = form.cleaned_data['company']
             count = company.count()
-            sub = Subscriber.objects.get(user=user_here)
+            sub = Subscriber.objects.select_related('client').get(user=request.user.id)
             client = sub.client
 
             story_save = Story.objects.create(title=title, url=url, pub_date=pub_date, client=client,
@@ -189,14 +197,19 @@ def add_story(request):
 
 
 def story_listing(request):
-
     if request.user.is_staff:
         stories_list = Story.objects.all()
+        count = 0
+        for i in stories_list:
+            count = count + 1
     else:
-        user_here = request.user.id
-        sb = Subscriber.objects.get(user=user_here)
-        curr_client = sb.client
+        # curr_user = request.user.id
+        # sub = Subscriber.objects.get(user=user_here)
+        sub = Subscriber.objects.select_related('client').get(user=request.user.id)
+        curr_client = sub.client
         stories_list = Story.objects.filter(client=curr_client)
+        for i in stories_list:
+            count = count + 1
 
     page = request.GET.get('page', 1)
 
@@ -209,7 +222,7 @@ def story_listing(request):
         stories = paginator.page(paginator.num_pages)
 
     context = {
-        'stories': stories,
+        'stories': stories, 'count': count,
     }
     return render(request, 'newsStories/storyListing.html', context)
 
@@ -239,7 +252,6 @@ def update_story(request, pk):
         return redirect('/storylist')
 
     else:
-
         story_obj = Story.objects.get(id=pk)
         print(story_obj)
         context = {'story_obj': story_obj}
@@ -247,17 +259,25 @@ def update_story(request, pk):
 
 
 def story_search(request):
-    user_here = request.user.id
-    sub = Subscriber.objects.get(user=user_here)
-    client_here = sub.client
+    # curr_user = request.user.id
+    sub = Subscriber.objects.select_related('client').get(user=request.user.id)
+    curr_client = sub.client
     # import ipdb;ipdb.set_trace()
     search = request.GET.get('search')
     if request.user.is_staff:
         stories = Story.objects.filter((Q(title__icontains=search) | Q(url__icontains=search)))
+        # count = stories.count
+        count = 0
+        for i in stories:
+            count = count + 1
 
     else:
-        stories = Story.objects.filter((Q(title__icontains=search) | Q(url__icontains=search)) & Q(client=client_here))
-    context = {'stories': stories, }
+        stories = Story.objects.filter((Q(title__icontains=search) | Q(url__icontains=search)) & Q(client=curr_client))
+        # count = stories.count
+        count = 0
+        for i in stories:
+            count = count + 1
+    context = {'stories': stories, 'count': count}
     return render(request, "newsStories/storyListing.html", context)
 
 
@@ -278,7 +298,7 @@ def story_fetch(request, pk):
         entry_link = e.link
         entry_desc = e.description
         entry_pub = e.published
-        curr_source = Source.objects.get(url=source_url)
+        curr_source = Source.objects.select_related('client').get(url=source_url)
         curr_client = curr_source.client
         curr_company = curr_client.id
         if Story.objects.filter(title=entry_title).exists():
