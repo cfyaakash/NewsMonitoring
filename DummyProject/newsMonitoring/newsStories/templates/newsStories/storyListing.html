@@ -7,7 +7,7 @@
 
     }
     .pagination{
-    padding-left: 40%;
+    padding-left: 10%;
     }
 
 </style>
@@ -39,9 +39,15 @@
      <span>&nbsp;&nbsp;<a href='logout/'>Logout</a> </span>
 </nav>
 
+{%if count %}
+<p style="text-align: center">Total number of stories are:  {{count}}</p>
+{% else %}
+<h2 style="text-align: center">No story Found !!!</h2>
+{% endif %}
 
 {% if stories %}
 <ul>
+<!--    <p>Total number of stories are:  {{count}}</p>-->
     {% for list in stories %}
          <li><div class="card">
           <div class="card-body">
@@ -52,7 +58,7 @@
             <a class="btn btn-primary" href='updatestory/{{list.id}}' role="button">Edit</a>
             <a class="btn btn-primary" href="storydelete/{{list.id}}" role="button">Delete</a>
               <br><br>
-            <p> Tagged companies :- {% for c in list.companies.all %}{{c}},{% endfor %}</p>
+            <p> Tagged companies :- {% for c in list.companies.all %}{{c}}{% endfor %}</p>
 
           </div>
 

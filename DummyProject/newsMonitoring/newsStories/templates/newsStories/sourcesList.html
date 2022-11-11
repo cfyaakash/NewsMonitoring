@@ -36,10 +36,14 @@
     <span>&nbsp;&nbsp;<a href='logout/'>Logout</a> </span>
 </nav>
 
-
+{%if count %}
+<p style="text-align: center">Total number of stories are:  {{count}}</p>
+{% else %}
+<h2 style="text-align: center">No story Found !!!</h2>
+{% endif %}
 {% if sources %}
 
-<h3> Number of sources added for this user is:-  {{count}}</h3>
+<!--<h3> Number of sources added for this user is:-  {{count}}</h3>-->
 
 <ul>
     {% for list in sources %}
